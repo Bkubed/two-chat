@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Two Chat</title>
+</head>
+<body>
+  <h1>Two-Person Chat</h1>
+  <input id="nameInput" placeholder="Enter your name" />
+  <input id="roomInput" placeholder="Enter Room ID" />
+  <button onclick="joinRoom()">Join</button>
+
+  <div id="chat" style="display:none;">
+    <p id="status"></p>
+    <input id="messageInput" placeholder="Type message..." />
+    <button onclick="sendMessage()">Send</button>
+    <ul id="messages"></ul>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let currentRoom = "";
+
+    function joinRoom() {
+  const room = document.getElementById("roomInput").value;
+  const name = document.getElementById("nameInput").value;
+
+  currentRoom = room;
+
+  socket.emit("join-room", { roomId: room, username: name });
+}
+
+    socket.on("user-count", (count) => {
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("status").innerText = 
+        count === 2 ? "Connected" : "Waiting for partner...";
+    });
+
+    socket.on("room-full", () => {
+      alert("Room is full.");
+    });
+
+    socket.on("receive-message", (data) => {
+  const li = document.createElement("li");
+  li.innerText = data.user + ": " + data.text;
+  document.getElementById("messages").appendChild(li);
+});
+
+    function sendMessage() {
+      const message = document.getElementById("messageInput").value;
+      socket.emit("send-message", message);
+      document.getElementById("messageInput").value = "";
+    }
+  </script>
+</body>
+</html>
